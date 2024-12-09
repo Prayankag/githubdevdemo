@@ -1,0 +1,101 @@
+# Define the name of the GitHub Action workflow
+name: Create an EC2 Instance
+
+# This workflow is manually triggered using the GitHub Actions UI
+on:
+  workflow_dispatch:
+    # Define inputs that are required for the manual trigger
+    inputs:
+      instanceName:
+        description: "Name of the AWS Instance"
+        required: true
+      awsRegion:
+        description: "AWS Region for the instance"
+        required: true
+      instanceType:
+        description: "AWS instance type"
+        required: true
+      action:
+        description: "Action to perform (apply/destroy)"
+        required: true
+
+# Jobs to be executed in this workflow
+jobs:
+  # Display input values for debugging
+  display-input-values:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Display Input Values
+        run: |
+          echo "Instance Name:  "
+          echo "AWS Region: "
+          echo "Instance Type: "
+          echo "Action: "
+
+  # Job to apply the EC2 instance
+  apply_ec2:
+    runs-on: ubuntu-latest
+    needs: display-input-values
+    if: false  # Only run if action is "apply"
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: 
+          aws-secret-access-key: 
+          aws-region: 
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+
+      - name: Terraform Format
+        run: terraform fmt
+        working-directory: ./terraform
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: ./terraform
+
+      - name: Terraform Plan
+        run: terraform plan -var "instanceName=" -var "awsRegion=" -var "instanceType=" -out=tfplan
+        working-directory: ./terraform
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve "tfplan"
+        working-directory: ./terraform
+
+  # Job to destroy the EC2 instance
+  destroy_instance:
+    runs-on: ubuntu-latest
+    needs: display-input-values
+    if: false  # Only run if action is "destroy"
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: 
+          aws-secret-access-key: 
+          aws-region: 
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+
+      - name: Terraform Format
+        run: terraform fmt
+        working-directory: ./terraform
+
+      - name: Terraform Plan Destroy
+        run: terraform plan -destroy -var "instanceName=" -var "awsRegion=" -var "instanceType=" -out=tfplan
+        working-directory: ./terraform
+
+      - name: Terraform Destroy
+        run: terraform apply -auto-approve tfplan
+        working-directory: ./terraform
